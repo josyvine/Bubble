@@ -69,6 +69,10 @@ public class SenderService extends Service {
     private String dropRequestId;
     private ListenerRegistration requestListener;
 
+    // --- THIS IS THE FIX: The missing arrays have been added here. ---
+    private static final String[] ADJECTIVES = {"Red", "Blue", "Green", "Silent", "Fast", "Brave", "Ancient", "Wandering", "Golden", "Iron"};
+    private static final String[] NOUNS = {"Tiger", "Lion", "Eagle", "Fox", "Wolf", "River", "Mountain", "Star", "Comet", "Shadow"};
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -88,7 +92,6 @@ public class SenderService extends Service {
             Notification notification = buildNotification("Starting Drop Send Service...", true);
             startForeground(NOTIFICATION_ID, notification);
             
-            // --- MODIFICATION: Start the progress activity for the sender ---
             Intent progressIntent = new Intent(this, DropProgressActivity.class);
             progressIntent.putExtra("is_sender", true);
             progressIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -183,7 +186,7 @@ public class SenderService extends Service {
                     }
                 });
     }
-
+    
     private void broadcastStatus(String major, String minor, int progress, int max, long bytes) {
         Intent intent = new Intent(DropProgressActivity.ACTION_UPDATE_STATUS);
         intent.putExtra(DropProgressActivity.EXTRA_STATUS_MAJOR, major);
@@ -193,7 +196,7 @@ public class SenderService extends Service {
         intent.putExtra(DropProgressActivity.EXTRA_BYTES_TRANSFERRED, bytes);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
-
+    
     private void broadcastComplete() {
         Intent intent = new Intent(DropProgressActivity.ACTION_TRANSFER_COMPLETE);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
@@ -201,12 +204,10 @@ public class SenderService extends Service {
 
     private void broadcastError(String message) {
         Intent intent = new Intent(DropProgressActivity.ACTION_TRANSFER_ERROR);
-        // This will be received by HFMDropActivity, which is always listening.
         Intent hfmdropErrorIntent = new Intent(DownloadService.ACTION_DOWNLOAD_ERROR);
         hfmdropErrorIntent.putExtra(DownloadService.EXTRA_ERROR_MESSAGE, message);
         LocalBroadcastManager.getInstance(this).sendBroadcast(hfmdropErrorIntent);
 
-        // This will be received by DropProgressActivity if it is open.
         LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(DropProgressActivity.ACTION_TRANSFER_ERROR));
     }
     
