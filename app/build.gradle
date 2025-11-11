@@ -21,7 +21,6 @@ android {
     }
 
     compileOptions {
-        // Using Java 8 is compatible with both libtorrent4j 1.x and 2.x.
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -75,21 +74,17 @@ dependencies {
     // OkHttp for Gemini API
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
 
-    // Firebase Bill of Materials (BoM) - manages versions for Firebase libraries
+    // Firebase BoM
     implementation platform('com.google.firebase:firebase-bom:33.0.0')
-
-    // Firebase SDKs for HFM Messenger Drop
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore'
 
-    // --- START OF CORRECTION ---
-    // TORRENT CLIENT - Updated version to 2.1.0-38 (latest working release)
-    def libtorrentVersion = "2.1.0-38"
+    // --- TORRENT CLIENT ---
+    // Libtorrent4j 2.2.x (API fully compatible with your Java code)
+    def libtorrentVersion = "2.2.0-33"
     implementation "org.libtorrent4j:libtorrent4j:$libtorrentVersion"
-    // Including native libraries for all common Android architectures.
     implementation "org.libtorrent4j:libtorrent4j-android-arm64:$libtorrentVersion"
     implementation "org.libtorrent4j:libtorrent4j-android-arm:$libtorrentVersion"
     implementation "org.libtorrent4j:libtorrent4j-android-x86:$libtorrentVersion"
     implementation "org.libtorrent4j:libtorrent4j-android-x86_64:$libtorrentVersion"
-    // --- END OF CORRECTION ---
 }
