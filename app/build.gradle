@@ -1,14 +1,18 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    // FIX: Added namespace required by Gradle 8.0+
+    namespace 'com.txtify.app'
 
+    // FIX: Updated SDK version to work with modern Gradle
+    compileSdkVersion 34
+    
     defaultConfig {
         // Using our app's ID and settings
         applicationId "com.txtify.app"
         minSdkVersion 21
-        targetSdkVersion 29
+        // FIX: Updated target SDK to match compile SDK
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
         
@@ -45,4 +49,3 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0' // <-- ADD THIS LINE
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
 }
-
