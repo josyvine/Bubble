@@ -22,6 +22,11 @@
         android:requestLegacyExternalStorage="true"
         android:name=".MyApplication">
 
+        <!-- NEW: AdMob App ID Configuration -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-2223803405403727~8067739426"/>
+
         <!-- Main Activity Declaration -->
         <activity
             android:name=".MainActivity"
