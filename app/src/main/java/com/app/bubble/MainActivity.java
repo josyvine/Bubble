@@ -3,6 +3,7 @@ package com.app.bubble;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
@@ -12,9 +13,23 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+// NEW: Imports for In-App Updates
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.AppUpdateType;
+import com.google.android.play.core.install.model.UpdateAvailability;
+import com.google.android.gms.tasks.Task;
+
 public class MainActivity extends Activity { // It is now Activity, NOT AppCompatActivity
     private static final int OVERLAY_PERMISSION_REQ_CODE = 1234;
     private static final int SCREEN_CAPTURE_REQ_CODE = 5678;
+    
+    // NEW: Request code for In-App Update
+    private static final int APP_UPDATE_REQUEST_CODE = 999;
+    
+    // NEW: App Update Manager
+    private AppUpdateManager appUpdateManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +45,61 @@ public class MainActivity extends Activity { // It is now Activity, NOT AppCompa
 					}
 				}
 			});
+            
+        // NEW: Check for immediate updates when app starts
+        appUpdateManager = AppUpdateManagerFactory.create(this);
+        checkForAppUpdate();
+    }
+
+    // NEW: Method to check for Google Play updates
+    private void checkForAppUpdate() {
+        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
+
+        appUpdateInfoTask.addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<AppUpdateInfo>() {
+            @Override
+            public void onSuccess(AppUpdateInfo appUpdateInfo) {
+                if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                        && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                    
+                    try {
+                        appUpdateManager.startUpdateFlowForResult(
+                                appUpdateInfo,
+                                AppUpdateType.IMMEDIATE,
+                                MainActivity.this,
+                                APP_UPDATE_REQUEST_CODE);
+                    } catch (IntentSender.SendIntentException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
+    // NEW: Check on resume if the update is in progress
+    @Override
+    protected void onResume() {
+        super.onResume();
+        
+        appUpdateManager
+            .getAppUpdateInfo()
+            .addOnSuccessListener(new com.google.android.gms.tasks.OnSuccessListener<AppUpdateInfo>() {
+                @Override
+                public void onSuccess(AppUpdateInfo appUpdateInfo) {
+                    if (appUpdateInfo.updateAvailability()
+                            == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                        // If an in-app update is already in progress, resume the update.
+                        try {
+                            appUpdateManager.startUpdateFlowForResult(
+                                    appUpdateInfo,
+                                    AppUpdateType.IMMEDIATE,
+                                    MainActivity.this,
+                                    APP_UPDATE_REQUEST_CODE);
+                        } catch (IntentSender.SendIntentException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
     }
 
     private boolean checkOverlayPermission() {
@@ -52,6 +122,16 @@ public class MainActivity extends Activity { // It is now Activity, NOT AppCompa
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        
+        // NEW: Handle the result of the In-App Update
+        if (requestCode == APP_UPDATE_REQUEST_CODE) {
+            if (resultCode != RESULT_OK) {
+                // If the update is cancelled or fails, close the app (Strict Mode)
+                Toast.makeText(this, "Update is required to continue.", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+        }
 
         if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
